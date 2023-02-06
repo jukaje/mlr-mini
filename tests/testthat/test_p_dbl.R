@@ -1,0 +1,1 @@
+testthat::expect_equal(p_dbl(1, 3), list(type = "dbl", start = 1, end = 3))
