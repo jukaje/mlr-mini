@@ -1,0 +1,3 @@
+inducer <- function(x) {
+ structure()
+}
