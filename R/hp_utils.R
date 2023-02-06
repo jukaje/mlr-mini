@@ -69,7 +69,7 @@ hp <- function(...) {
   # dplyr::between(value, start, end)
   
   structure(list(
-    name = hpnames, type = hptype, range = hprange # hprange = vector
+    name = hpnames, type = hptype, range = hprange # hprange = vector // result better as data.table??
   ), class = "hp")
 }
 
@@ -77,7 +77,7 @@ hpx <- hp(x = p_dbl(0, 1), y = p_int(1, 10), z = p_fct(letters))
 
 #############################################
 
-print.hp <- function(x, ...) {
+print.hp <- function(x, ...) { # Why is there ... here?
   print(data.table(name = x$name, type = x$type, range = x$range))
   invisible(x)
 }
@@ -104,13 +104,55 @@ checkHyperparameter <- function(hps, hpx) {
   # check that hps are a list
   
   # check that hpspace is a datatable
+  result <- logical()
+  endresult <- logical()
   
-#     for (hpcurrent in hps) {
-#       if (typeof(hpcurrent) == "dbl") {
-#         result[length(result) + 1] <- dplyr::between(hpcurrent, hpx[[names(hpcurrent)]]$start, hpx[[names(hpcurrent)]]$end)
-#       }
-#     }
-#   
+    for (hpcurrent in seq_len(length(hps))) {
+      
+      if (typeof(hps[[hpcurrent]]) == "double") {
+        entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+        result <- dplyr::between(hps[[hpcurrent]], hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]])
+        
+        if (!result) {
+          endresult[length(endresult) + 1] <- FALSE
+          print(sprintf("must be within range between %s and %s, but is %s", hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]], hps[[hpcurrent]]))
+        } else {
+          endresult[length(endresult) + 1] <- TRUE
+        }
+      }
+    
+  
+  if (typeof(hps[[hpcurrent]]) == "integer") {
+    entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+    result <- dplyr::between(hps[[hpcurrent]], hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]])
+    
+    if (!result) {
+      endresult[length(endresult) + 1] <- FALSE
+      print(sprintf("must be an integer between %s and %s, but is %s", hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]], hps[[hpcurrent]]))
+    } else {
+      endresult[length(endresult) + 1] <- TRUE
+    }
+  }
+      if (typeof(hps[[hpcurrent]]) == "character") {
+        entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+        result <- hps[[hpcurrent]] %in% hpx$range[[entryhp]]
+        
+        if (!result) {
+          endresult[length(endresult) + 1] <- FALSE
+          print(sprintf("must be element of set {%s}, but is '%s'", paste(hpx$range[[entryhp]], collapse = ", "), hps[[hpcurrent]]))
+        } else {
+          endresult[length(endresult) + 1] <- TRUE
+        }
+      }
+      
+    }
+  
+  if (any(!isTRUE(endresult))) {
+    invisible(FALSE)
+  } else {
+    return(TRUE)
+  }
+  
  }
 
 
