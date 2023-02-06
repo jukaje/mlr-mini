@@ -1,1 +1,1 @@
-# Mini-mlr package
+# mlr-mini package
