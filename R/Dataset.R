@@ -49,7 +49,6 @@ t[1,1]
 #dataframe
 names(t$data) 
 
-unclass(t)
 
 
 class(Dataset(cars, target = "dist", type = "dd"))
