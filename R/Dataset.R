@@ -85,8 +85,8 @@ metainfo <- function(data) {
   nrow <- nrow(data$data)
   type <- data$type
   missings <- any(is.na(data$data))
-  info <- list(feature = c(lapply(features, function(x) { c(x, class(data$data[,x])) })), 
-               target = c(targets, class(data$data[,targets])),
+  info <- list(feature = sapply(data$data[features],class), 
+               target = sapply(data$data[targets],class),
                nrow = nrow, type = type, missings = missings)
   class(info) <- "DatasetInfo"
   return(info)
