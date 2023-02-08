@@ -1,9 +1,18 @@
 library(data.table)
+library(xgboost)
 xgb <- function(.data, eta = NA, nrounds = NA, max_depth = NA, colsample_bytree = NA, colsample_bylevel = NA,
                 lambda = NA, alpha = NA, subsample = NA, verbose = 0) {
  .f <- function(.data) {
-   output
-   structure()
+   if (is.na(nrounds)) {nrounds <- 1}
+   start <- Sys.time()
+   output <- xgboost(data = as.matrix(.data$data[, names(metainfo(.data)$features)]),
+                     label = .data$data[, names(metainfo(.data)$targets)], verbose = verbose, nrounds = nrounds,
+                     params = configuration(.f)[!names(configuration(.f)) %in% c("verbose", "nrounds")])
+   end <- Sys.time()
+   
+   structure(list(output = output, data = .data, config = configuration(.f), model = "xgboost",
+                  training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
+             class = c("ModelXGBoost", "ModelRegression", "Model"))
  }
   
   if (!missing(.data)) {
@@ -24,7 +33,10 @@ hyperparameters <- function(x) {
   }
 }
 
-configuration <- function(x) {
+configuration <- function(x, ...) {
+  UseMethod("configuration")
+}
+configuration.default <- function(x) {
   hypernames <- ls(environment(x))
   defhyp <- lapply(hypernames, function(name) {
     environment(x)[[name]]
@@ -45,6 +57,39 @@ print.Inducer <- function(x, ...) {
  cat("Configuartion:", paste0(paste(names(configuration(x)), "=", configuration(x)), collapse = ", "))
  invisible(x)
 }
+
 ind <- new.env()
 ind$xgboost <- InducerXGBoost
+
+print.ModelRegression <- function(x, ...) {
+  cat("Regression Model: '", regmatches(class(x)[[1]], regexpr("(?<=Model).*", class(x)[[1]], perl = TRUE)),
+      "' fitted on '", x$data$name, "' dataset.\n", sep = "")
+  invisible(x)
+}
+
+modelObject <- function(x) {
+  x$output
+}
+
+modelInfo <- function(x) {
+  x["training.time.sec"]
+}
+configuration.Model <- function(x) {
+  x$config
+}
+
+inducer <- function(x) {
+  do.call(ind[[x$model]], x$config)
+}
+
+predict.ModelXGBoost <- function(x, newdata) {
+  if (any(colnames(newdata) %in% x$data$target)) {
+    data.table("predicition" = predict(x$output,
+                                       newdata = as.matrix(newdata[, !colnames(newdata) %in% x$data$target])),
+               "truth" = newdata[, x$data$target])
+  } else {
+    predict(x$output, newdata = as.matrix(newdata))
+  }
+}
+
 rm(xgb)
