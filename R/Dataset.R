@@ -44,11 +44,9 @@ print.Dataset <- function(object) {
 '[.Dataset' <- function(obj, i, j = names(obj$data)) {
   
   if (is.character(j) & !(obj$target %in% j)) {
-    cat(c("Error: Cannot remove target column ", 
-         '"', obj$target, '"', "\n"), sep = "")
+    stop(sprintf('Cannot remove target column "%s" \n', obj$target))
   } else if (is.numeric(j) & !(obj$target %in% names(obj$data)[j])) {
-    cat(c("Error: Cannot remove target column ", 
-          '"', obj$target, '"', "\n"), sep = "")
+    stop(sprintf('Cannot remove target column "%s" \n', obj$target))
   } else {
     data.frame(unclass(obj$data))[i,j]
   }
