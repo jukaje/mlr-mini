@@ -38,7 +38,7 @@ hp <- function(...) {
   
   # result <- data.table("name" = character(), "type" = character(), "range" = c())
   #colnames(result) <- c("name_type", "range")
-  result <- setNames(data.table(matrix(nrow = nargs(), ncol = 3)), c("name", "type", "range")) # nargs() RETURNS THE NUMBER of arguments given
+  # result <- setNames(data.table(matrix(nrow = nargs(), ncol = 3)), c("name", "type", "range")) # nargs() RETURNS THE NUMBER of arguments given
   
   input <- c(...)
   hpnames <- names(list(...))
@@ -147,10 +147,10 @@ checkHyperparameter <- function(hps, hpx) {
       
     }
   
-  if (any(!isTRUE(endresult))) {
-    invisible(FALSE)
-  } else {
+  if (all(endresult)) {
     return(TRUE)
+  } else {
+    invisible(FALSE)
   }
   
  }
