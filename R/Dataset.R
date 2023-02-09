@@ -8,9 +8,13 @@
 #' Dataset(cars, target = "dist", type = "regression")
 #' @export
 
-Dataset <- function(data, target, type = character(0), name = deparse(substitute(data), 20)[[1]]){
-  structure(list(data = data, target = target, type = type, name = name),
-            class = c("DatasetRegression", "Dataset"))
+Dataset <- function(data, target, name = deparse(substitute(data), 20)[[1]]){
+  task_in = readline('Which task ("0 = Classification" / " 1 = Regression"): ')
+  
+  if (task_in == 0) task <- "Classification" else task <- "Regression"
+  task_out <- paste("Dataset", task, sep = "")
+  structure(list(data = data, target = target, type = task, name = name),
+            class = c(task_out, "Dataset"))
 }
 
 #' @title Dataset Print
@@ -41,14 +45,20 @@ print.Dataset <- function(object) {
 #' 2     4   10
 #' @export
 
-'[.Dataset' <- function(obj, i, j = names(obj$data)) {
-  
+'[.Dataset' <- function(obj, i = rownames(obj$data), j = names(obj$data)) {
+  #rownames(obj$data)
+  #names(obj$data)
+  #if (missing(i) & missing(i)) {
+  #  i <- rownames(obj$data)
+  #  j <- names(obj$data)
+  #} 
   if (is.character(j) & !(obj$target %in% j)) {
     stop(sprintf('Cannot remove target column "%s" \n', obj$target))
   } else if (is.numeric(j) & !(obj$target %in% names(obj$data)[j])) {
     stop(sprintf('Cannot remove target column "%s" \n', obj$target))
-  } else {
-    data.frame(unclass(obj$data))[i,j]
+  } 
+    else {
+    as.data.frame(obj$data)[i,j]
   }
   
 }
@@ -107,6 +117,5 @@ as.matrix.Dataset <- function(Dataset) {
 as.data.frame.Dataset <- function(Dataset) {
   as.data.frame(Dataset$data)
 }
-
 
 
