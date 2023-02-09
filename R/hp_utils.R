@@ -69,7 +69,7 @@ hp <- function(...) {
     
     # store the factors
     if (hpcurrent$type == "fct") {
-      hprange[[length(hprange) + 1]] <- hpcurrent$factors
+      hprange[[length(hprange) + 1]] <- hpcurrent$levels
     }
   }
   
