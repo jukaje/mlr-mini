@@ -1,0 +1,21 @@
+Package: mlr.mini
+Title: Machine Learning in R mini version
+Description: Mini version of the package 'Maching Learning in R' which provides an abstraction layer over various machine learning algorithms that are available in R. The primary problem it tries to solve is that there are many different algorithms that all have slightly different user interfaces. Another goal is to simplify evaluation and optimization of algorithms.
+Authors@R: c(
+  person("Sophia", "F.", email = "mlrmini.sophia@gmx.net", role = c("aut", "cre")),
+  person("Judith", "J.", email = "mlrmini.judith@gmx.net", role = c("aut")),
+  person("Hagen", "L.", email = "mlrmini.hagen@gmx.net", role = c("aut")),
+  person("Nils", "W.", email = "mlrmini.nils@gmx.net", role = c("aut")),
+  person("Michael", "R.", email = "mlrmini.michael@gmx.net", role = c("aut"))
+  )
+URL: https://github.com/jukaje/mlr-mini
+BugReports: https://github.com/jukaje/mlr-mini/issues
+License: GPL-2
+Version: 0.0.1
+Imports:
+  checkmate,
+  data.table,
+  dplyr
+Suggests:
+  testthat
+RoxygenNote: 7.2.3
