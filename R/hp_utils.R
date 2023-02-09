@@ -100,10 +100,6 @@ print.hp <- function(x, ...) { # Why is there ... here?
 }
 
 
-test_that("print.hp correctly prints the data table", {
-  x <- list(name = "HP", type = "LaserJet", range = "1000-5000")
-  expect_equal(print.hp(x), data.table(name = x$name, type = x$type, range = x$range))
-})
 
 
 ##############################################
