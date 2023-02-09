@@ -15,7 +15,9 @@ Version: 0.0.1
 Imports:
   checkmate,
   data.table,
-  dplyr
+  dplyr,
+  ranger,
+  xgboost
 Suggests:
   testthat
 RoxygenNote: 7.2.3
