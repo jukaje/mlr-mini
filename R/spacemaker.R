@@ -55,6 +55,7 @@ p_int <- function(range1, range2) {
   return(list(type = "int", start = range1, end = range2))
 }
 
+
 #' @title make hyperparameter space
 #' @description This function returns the type, and start and end of a vector of factors
 #' @param factors vector of factors
@@ -77,4 +78,5 @@ p_fct <- function(levels) {
   checkmate::assertAtomic(levels)
   return(list(type = "fct", levels = as.character(levels)))
 }
+
 

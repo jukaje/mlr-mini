@@ -26,6 +26,24 @@
 #> and store the type, range, and name of each hyperparameter in a data.table object
 
 
+
+#' Constructor for class 'hp'
+#'
+#' @param ... 
+#
+#' @export
+#'
+#' @examples
+#' 
+#' hpx <- hp(p_dbl(0, 1), p_int(1, 10), p_fct(letters))
+#' hpx
+#' 
+#' #>    name type                range
+#' #> 1:    x  dbl               0, 1
+#' #> 2:    y  int              1, 10
+#' #> 3:    z  fct "a", "b", "c", ...
+
+
 hp <- function(...) {
   
   # define the list elements necessary for the result
@@ -63,15 +81,24 @@ hp <- function(...) {
   ), class = "hp")
 }
 
+
 # example: hpx <- hp(x = p_dbl(0, 1), y = p_int(1, 10), z = p_fct(letters))
 
 #############################################
 
 # define the print method for hp objects
+#' Print method for hp objects
+#'
+#' @param x 
+#' @param ... 
+#'
+#' @export
+
 print.hp <- function(x, ...) { # Why is there ... here?
   print(data.table(name = x$name, type = x$type, range = x$range))
   invisible(x)
 }
+
 
 
 
@@ -80,7 +107,29 @@ print.hp <- function(x, ...) { # Why is there ... here?
 
 # space contained in: hyperparameters(ind$xgboost)
 
-
+#' check if Hyperparameters are valid for given hyperparameter space
+#'
+#' @param hps 
+#' @param hpx 
+#'
+#' @export
+#'
+#' @examples
+#' 
+#' hpx
+#' #>    name type                range
+#' #> 1:    x  dbl               [0, 1]
+#' #> 2:    y  int              [1, 10]
+#' #> 3:    z  fct {"a", "b", "c", ...}
+#' 
+#' checkHyperparameter(list(x = 1, y = 1, z = "a"), hpx)
+#' #> [1] TRUE
+#' 
+#' checkHyperparameter(list(z = "a"), hpx)
+#' #> [1] TRUE
+#' 
+#' checkHyperparameter(list(z = "A"), hpx)
+#' #> [1] "Must be element of set {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'}, but is 'A'"
 
 checkHyperparameter <- function(hps, hpx) {
   # check that hps are a list
