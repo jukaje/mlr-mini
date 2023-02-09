@@ -4,7 +4,7 @@
 \alias{[.Dataset}
 \title{Dataset column and row selection}
 \usage{
-\method{[}{Dataset}(obj, i, j = names(obj$data))
+\method{[}{Dataset}(obj, i, j)
 }
 \arguments{
 \item{obj:}{Element of class Dataset}

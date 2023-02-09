@@ -4,12 +4,7 @@
 \alias{Dataset}
 \title{Dataset Config}
 \usage{
-Dataset(
-  data,
-  target,
-  type = character(0),
-  name = deparse(substitute(data), 20)[[1]]
-)
+Dataset(data, target, name = deparse(substitute(data), 20)[[1]])
 }
 \arguments{
 \item{data:}{Dataframe for target and features}
