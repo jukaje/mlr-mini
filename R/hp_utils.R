@@ -35,7 +35,7 @@
 #'
 #' @examples
 #' 
-#' hpx <- hp(p_dbl(0, 1), p_int(1, 10), p_fct(letters))
+#' hpx <- hp(x = p_dbl(0, 1), y = p_int(1, 10), z = p_fct(letters))
 #' hpx
 #' 
 #' #>    name type                range
@@ -116,6 +116,7 @@ print.hp <- function(x, ...) { # Why is there ... here?
 #'
 #' @examples
 #' 
+#' hpx <- hp(x = p_dbl(0, 1), y = p_int(1, 10), Z = p_fct(letters))
 #' hpx
 #' #>    name type                range
 #' #> 1:    x  dbl               [0, 1]
