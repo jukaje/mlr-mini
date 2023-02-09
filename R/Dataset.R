@@ -5,13 +5,14 @@
 #' @param type: "regression", "classification"
 #' @param name: Character
 #' @examples. 
-#' Dataset(cars, target = "dist", type = "regression")
+#' Dataset(cars, target = "dist", task = "Regression")
 #' @export
 
-Dataset <- function(data, target, name = deparse(substitute(data), 20)[[1]]){
-  task_in = readline('Which task ("0 = Classification" / " 1 = Regression"): ')
-  
-  if (task_in == 0) task <- "Classification" else task <- "Regression"
+Dataset <- function(data, target, task, name = deparse(substitute(data), 20)[[1]]){
+  if (missing(task)) {
+    task_in = readline('Which task ("0 = Classification" / " 1 = Regression"): ')
+    if (task_in == 0) task <- "Classification" else task <- "Regression"
+  } 
   task_out <- paste("Dataset", task, sep = "")
   structure(list(data = data, target = target, type = task, name = name),
             class = c(task_out, "Dataset"))
@@ -56,6 +57,8 @@ print.Dataset <- function(object) {
     j <- names(obj$data)
   } else if (missing(j)) {
     j <- names(obj$data)
+  } else if (missing(i)) {
+    i <- rownames(obj$data)
   }
   if (is.character(j) & !(obj$target %in% j)) {
     stop(sprintf('Cannot remove target column "%s" \n', obj$target))
