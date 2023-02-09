@@ -21,8 +21,8 @@
 #' @export
 
 p_dbl <- function(range1, range2) {
-  checkmate::checkNumeric(range1, len = 1)
-  checkmate::checkNumeric(range2, len = 1)
+  checkmate::assertNumeric(range1, len = 1)
+  checkmate::assertNumeric(range2, len = 1)
   return(list(type = "dbl", start = range1, end = range2))
 }
 
@@ -50,8 +50,8 @@ p_dbl <- function(range1, range2) {
 
 p_int <- function(range1, range2) {
   # checkIntegerish
-  checkmate::checkIntegerish(range1, len = 1)
-  checkmate::checkIntegerish(range2, len = 1)
+  checkmate::assertIntegerish(range1, len = 1)
+  checkmate::assertIntegerish(range2, len = 1)
   return(list(type = "int", start = range1, end = range2))
 }
 
@@ -74,7 +74,7 @@ p_int <- function(range1, range2) {
 #' @export
 
 p_fct <- function(levels) {
-  checkmate::checkAtomic(levels)
+  checkmate::assertAtomic(levels)
   return(list(type = "fct", levels = as.character(levels)))
 }
 

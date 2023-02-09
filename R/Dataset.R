@@ -45,20 +45,27 @@ print.Dataset <- function(object) {
 #' 2     4   10
 #' @export
 
-'[.Dataset' <- function(obj, i = rownames(obj$data), j = names(obj$data)) {
-  #rownames(obj$data)
-  #names(obj$data)
-  #if (missing(i) & missing(i)) {
-  #  i <- rownames(obj$data)
-  #  j <- names(obj$data)
-  #} 
+'[.Dataset' <- function(obj, i , j) {
+  #= rownames(obj$data)
+  out_str <- nargs()
+  if (out_str == 2) {
+    j <- i
+    i <- rownames(obj$data)
+  } else if (missing(i) & missing(j)) {
+    i <- rownames(obj$data)
+    j <- names(obj$data)
+  } else if (missing(j)) {
+    j <- names(obj$data)
+  }
   if (is.character(j) & !(obj$target %in% j)) {
     stop(sprintf('Cannot remove target column "%s" \n', obj$target))
   } else if (is.numeric(j) & !(obj$target %in% names(obj$data)[j])) {
     stop(sprintf('Cannot remove target column "%s" \n', obj$target))
   } 
-    else {
-    as.data.frame(obj$data)[i,j]
+    else if (out_str == 2) {
+    as.data.frame(obj$data)[j]
+    } else {
+      as.data.frame(obj$data)[i,j]
   }
   
 }

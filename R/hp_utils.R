@@ -25,6 +25,7 @@
 #> the space. It uses the p_dbl, p_int, and p_fct functions to create the lists for each hyperparameter 
 #> and store the type, range, and name of each hyperparameter in a data.table object
 
+
 hp <- function(...) {
   
   # define the list elements necessary for the result
@@ -45,7 +46,6 @@ hp <- function(...) {
     
     # store the range
     if (hpcurrent$type == ("int")) {
-      # to do: checkIntegerish
       hprange[[length(hprange) + 1]] <- c(hpcurrent$start, hpcurrent$end)
     }
     
@@ -112,6 +112,8 @@ checkHyperparameter <- function(hps, hpx) {
   if (typeof(hps[[hpcurrent]]) == "integer") {
     
     entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+    # check if the current hp value is an Integer
+    checkmate::checkIntegerish(hps[hpcurrent])
     # Check if the current hyperparameter value is within the specified range
     result <- dplyr::between(hps[[hpcurrent]], hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]])
     
