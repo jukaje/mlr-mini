@@ -20,47 +20,37 @@
 
 
 # hp <- # class constructor
-
-p_dbl <- function(range1, range2) {
-  return(list(type = "dbl", start = range1, end = range2))
-}
-
-p_int <- function(range1, range2) {
-  # checkIntegerish
-  return(list(type = "int", start = range1, end = range2))
-}
-
-p_fct <- function(factors) {
-  return(list(type = "fct", factors = factors))
-}
+# hp: this is the constructor for the hyperparameters S3 object. 
+#> It takes a variable number of arguments, which correspond to the different hyperparameters to be included in 
+#> the space. It uses the p_dbl, p_int, and p_fct functions to create the lists for each hyperparameter 
+#> and store the type, range, and name of each hyperparameter in a data.table object
 
 hp <- function(...) {
   
-  # result <- data.table("name" = character(), "type" = character(), "range" = c())
-  #colnames(result) <- c("name_type", "range")
-  # result <- setNames(data.table(matrix(nrow = nargs(), ncol = 3)), c("name", "type", "range")) # nargs() RETURNS THE NUMBER of arguments given
-  
-  input <- c(...)
+  # define the list elements necessary for the result
   hpnames <- names(list(...))
   hptype <- character()
   hprange <- list()
   
-  # save the given hyperparameter spaces
+  # for each given Hyperparameter, store the type and the given range, or the factors for factors
   for (hpcurrent in seq_len(nargs())) {
     hpcurrent <- list(...)[[hpcurrent]]
-    hptype[length(hptype) + 1] <- hpcurrent$type  # typeof(hpcurrent)
-
+    # store the type
+    hptype[length(hptype) + 1] <- hpcurrent$type
+    
+    # store the range
     if (hpcurrent$type == ("dbl")) {
-      # append(hprange, list(hpcurrent$start, hpcurrent$end))
       hprange[[length(hprange) + 1]] <- c(hpcurrent$start, hpcurrent$end)
     }
     
+    # store the range
     if (hpcurrent$type == ("int")) {
+      # to do: checkIntegerish
       hprange[[length(hprange) + 1]] <- c(hpcurrent$start, hpcurrent$end)
     }
-
+    
+    # store the factors
     if (hpcurrent$type == "fct") {
-      #checkIntegerish
       hprange[[length(hprange) + 1]] <- hpcurrent$factors
     }
   }
@@ -73,74 +63,79 @@ hp <- function(...) {
   ), class = "hp")
 }
 
-hpx <- hp(x = p_dbl(0, 1), y = p_int(1, 10), z = p_fct(letters))
+# example: hpx <- hp(x = p_dbl(0, 1), y = p_int(1, 10), z = p_fct(letters))
 
 #############################################
 
+# define the print method for hp objects
 print.hp <- function(x, ...) { # Why is there ... here?
   print(data.table(name = x$name, type = x$type, range = x$range))
   invisible(x)
 }
 
-#hpx
 
 
 ##############################################
 
-# checkHyperparameter(list(x = 1, y = 1, z = "a"), hpx)
-# #> [1] TRUE
-# 
-# checkHyperparameter(list(z = "a"), hpx)
-# #> [1] TRUE
-# 
-# checkHyperparameter(list(z = "A"), hpx)
-# #> [1] "Must be element of set {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'}, but is 'A'"
-
 
 # space contained in: hyperparameters(ind$xgboost)
+
 
 
 checkHyperparameter <- function(hps, hpx) {
   # check that hps are a list
   
   # check that hpspace is a datatable
+  # Initialize logical vectors to store the results
   result <- logical()
   endresult <- logical()
   
     for (hpcurrent in seq_len(length(hps))) {
       
       if (typeof(hps[[hpcurrent]]) == "double") {
+        # Find the index of the current hyperparameter in the 'hpx' datatable
         entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+        # Check if the current hyperparameter value is within the specified range
         result <- dplyr::between(hps[[hpcurrent]], hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]])
         
         if (!result) {
+          # If not within range, print an error message and store 'FALSE' in the 'endresult' vector
           endresult[length(endresult) + 1] <- FALSE
           print(sprintf("must be within range between %s and %s, but is %s", hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]], hps[[hpcurrent]]))
-        } else {
+        } else { 
+          # If within range, store 'TRUE' in the 'endresult' vector
           endresult[length(endresult) + 1] <- TRUE
         }
       }
     
   
   if (typeof(hps[[hpcurrent]]) == "integer") {
+    
     entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+    # Check if the current hyperparameter value is within the specified range
     result <- dplyr::between(hps[[hpcurrent]], hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]])
     
     if (!result) {
+      # If not within range, print an error message and store 'FALSE' in the 'endresult' vector
       endresult[length(endresult) + 1] <- FALSE
       print(sprintf("must be an integer between %s and %s, but is %s", hpx$range[[entryhp]][[1]], hpx$range[[entryhp]][[2]], hps[[hpcurrent]]))
     } else {
+      # If within range, store 'TRUE' in the 'endresult' vector
       endresult[length(endresult) + 1] <- TRUE
     }
   }
       if (typeof(hps[[hpcurrent]]) == "character") {
         entryhp <-  which(hpx$name == names(hps[hpcurrent]))
+        
+        # Check if the current hyperparameter value is within the set of valid values
         result <- hps[[hpcurrent]] %in% hpx$range[[entryhp]]
         
         if (!result) {
+          # If not within set, print an error message and store 'FALSE' in the 'endresult' vector
           endresult[length(endresult) + 1] <- FALSE
           print(sprintf("must be element of set {%s}, but is '%s'", paste(hpx$range[[entryhp]], collapse = ", "), hps[[hpcurrent]]))
         } else {
+          # If within set, store 'TRUE' in the 'endresult' vector
           endresult[length(endresult) + 1] <- TRUE
         }
       }
