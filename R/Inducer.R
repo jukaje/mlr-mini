@@ -1,48 +1,6 @@
 library(data.table)
 library(xgboost)
 library(ranger)
-xgb <- function(.data, eta = NULL, nrounds = NULL, max_depth = NULL, colsample_bytree = NULL,
-                colsample_bylevel = NULL, lambda = NULL, alpha = NULL, subsample = NULL, verbose = 0) {
- .f <- function(.data) {
-   if (is.na(nrounds)) {nrounds <- 1}
-   start <- Sys.time()
-   output <- xgboost(data = as.matrix(.data$data[, names(metainfo(.data)$feature)]),
-                     label = .data$data[, names(metainfo(.data)$target)], verbose = verbose, nrounds = nrounds,
-                     params = configuration(.f)[!names(configuration(.f)) %in% c("verbose", "nrounds")])
-   end <- Sys.time()
-   
-   structure(list(output = output, data = .data, config = configuration(.f), model = "xgboost",
-                  training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
-             class = c("ModelXGBoost", "ModelRegression", "Model"))
- }
-  
-  if (!missing(.data)) {
-   .f(.data)
- }
- structure(.f, class = c("InducerXGBoost", "Inducer"))
-}
-
-rf <- function(.data, min.node.size = NULL, max.depth = NULL, num.trees = 500, mtry = NULL, verbose = 0,
-               replace = TRUE) {
-  .f <- function(.data) {
-    start <- Sys.time()
-    output <- ranger(as.formula(paste(names(metainfo(.data)$target), "~",
-                                      paste(names(metainfo(.data)$feature), collapse = "+"))), data = .data$data,
-                     min.node.size = min.node.size, max.depth = max.depth, num.trees = num.trees, mtry = mtry,
-                     verbose = verbose, replace = replace)
-    end <- Sys.time()
-    structure(list(output = output, data = .data, config = configuration(.f), model = "rf",
-                   training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
-              class = c("ModelRandomForest", paste0("Model", output$forest$treetype), "Model"))
-  }
-  
-  if (!missing(.data)) {
-    .f(.data)
-  }
-  structure(.f, class = c("InducerRandomForest", "Inducer"))
-}
-
-
 #' Inducer for XGBoost
 #' 
 #' @param .data dataset object of class 'Dataset'
@@ -62,7 +20,27 @@ rf <- function(.data, min.node.size = NULL, max.depth = NULL, num.trees = 500, m
 #' mod <- xgb(cars.data)
 #' 
 #' mod <- InducerXGBoost(cars.data, nrounds = 10)
-InducerXGBoost <- structure(xgb, class = c("InducerXGBoost", "Inducer"))
+InducerXGBoost <- function(.data, eta = NULL, nrounds = NULL, max_depth = NULL, colsample_bytree = NULL,
+                           colsample_bylevel = NULL, lambda = NULL, alpha = NULL, subsample = NULL, verbose = 0) {
+  .f <- function(.data) {
+    if (is.na(nrounds)) {nrounds <- 1}
+    start <- Sys.time()
+    output <- xgboost(data = as.matrix(.data$data[, names(metainfo(.data)$feature)]),
+                      label = .data$data[, names(metainfo(.data)$target)], verbose = verbose, nrounds = nrounds,
+                      params = configuration(.f)[!names(configuration(.f)) %in% c("verbose", "nrounds")])
+    end <- Sys.time()
+    
+    structure(list(output = output, data = .data, config = configuration(.f), model = "xgboost",
+                   training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
+              class = c("ModelXGBoost", "ModelRegression", "Model"))
+  }
+  
+  if (!missing(.data)) {
+    .f(.data)
+  }
+  structure(.f, class = c("InducerXGBoost", "Inducer"))
+}
+class(InducerXGBoost) <- c("InducerXGBoost", "Inducer")
 
 
 #' Inducer for Random Forest
@@ -81,7 +59,28 @@ InducerXGBoost <- structure(xgb, class = c("InducerXGBoost", "Inducer"))
 #' mod <- rforest(cars.data)
 #' 
 #' mod <- InducerRandomForest(cars.data, num.trees = 400)
-InducerRandomForest <- structure(rf, class = c("InducerRandomForest", "Inducer"))
+InducerRandomForest <- function(.data, min.node.size = NULL, max.depth = NULL, num.trees = 500, mtry = NULL, verbose = 0,
+                                replace = TRUE) {
+  .f <- function(.data) {
+    start <- Sys.time()
+    output <- ranger(as.formula(paste(names(metainfo(.data)$target), "~",
+                                      paste(names(metainfo(.data)$feature), collapse = "+"))), data = .data$data,
+                     min.node.size = min.node.size, max.depth = max.depth, num.trees = num.trees, mtry = mtry,
+                     verbose = verbose, replace = replace)
+    end <- Sys.time()
+    structure(list(output = output, data = .data, config = configuration(.f), model = "rf",
+                   training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
+              class = c("ModelRandomForest", paste0("Model", output$forest$treetype), "Model"))
+  }
+  
+  if (!missing(.data)) {
+    .f(.data)
+  }
+  structure(.f, class = c("InducerRandomForest", "Inducer"))
+}
+class(InducerRandomForest) <- c("InducerRandomForest", "Inducer")
+
+
 
 hyperparameters.InducerXGBoost <- function(object, ...) {
   cat("Hyperparameter Space:\n")
@@ -190,4 +189,3 @@ predict.ModelRandomForest <- function(x, newdata) {
   }
 }
 
-rm(xgb, rf)
