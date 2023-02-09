@@ -83,24 +83,27 @@ InducerXGBoost <- structure(xgb, class = c("InducerXGBoost", "Inducer"))
 #' mod <- InducerRandomForest(cars.data, num.trees = 400)
 InducerRandomForest <- structure(rf, class = c("InducerRandomForest", "Inducer"))
 
-hyperparameters <- function(x) {
+hyperparameters.InducerXGBoost <- function(object, ...) {
   cat("Hyperparameter Space:\n")
-  if (any(class(x) == "InducerXGBoost")) {
-    return(data.table(name = c("eta", "nrounds", "max_depth", "colsample_bytree", "colsample_bylevel", "lambda",
-                               "alpha", "subsample", "verbose"),
-                      type = c(rep("dbl", 8), "int"),
-                      range = paste0("[", c(0, 1, rep(0, 7)), ", ", c(1, Inf, Inf, 1, 1, Inf, Inf, 1, 2), "]")))
-  }
-  if (any(class(x) == "InducerRandomForest")) {
-    return(data.table(name = c("min.node.size", "max.depth", "num.trees", "mtry", "verbose", "replace"),
-                      type = c(rep("int", 5), "log"),
-                      range = paste0("[", c(1, 0, 1, 1, 0, FALSE), ", ", c(Inf, 1, Inf, Inf, 1, TRUE), "]")))
-  }
+  data.table(name = c("eta", "nrounds", "max_depth", "colsample_bytree", "colsample_bylevel", "lambda",
+                             "alpha", "subsample", "verbose"),
+                    type = c(rep("dbl", 8), "int"),
+                    range = paste0("[", c(0, 1, rep(0, 7)), ", ", c(1, Inf, Inf, 1, 1, Inf, Inf, 1, 2), "]"))
 }
 
+
+hyperparameters.InducerRandomForest <- function(x) {
+  cat("Hyperparameter Space:\n")
+  data.table(name = c("min.node.size", "max.depth", "num.trees", "mtry", "verbose", "replace"),
+                    type = c(rep("int", 5), "log"),
+                    range = paste0("[", c(1, 0, 1, 1, 0, FALSE), ", ", c(Inf, 1, Inf, Inf, 1, TRUE), "]"))
+}
+
+# Anzeigen der angegebenen Hyperparamter
 configuration <- function(x, ...) {
   UseMethod("configuration")
 }
+
 configuration.default <- function(x, ...) {
   hypernames <- ls(environment(x))
   defhyp <- lapply(hypernames, function(name) {
@@ -117,15 +120,16 @@ configuration.default <- function(x, ...) {
   x
 }
 
+configuration.Model <- function(x) {
+  x$config
+}
+
+# print Funktionen
 print.Inducer <- function(x, ...) {
  cat("Inducer:", regmatches(class(x)[[1]], regexpr("(?<=Inducer).*", class(x)[[1]], perl = TRUE)), "\n")
  cat("Configuartion:", paste0(paste(names(configuration(x)), "=", configuration(x)), collapse = ", "))
  invisible(x)
 }
-
-ind <- new.env()
-ind$xgboost <- InducerXGBoost
-ind$rf <- InducerRandomForest
 
 print.Model <- function(x, ...) {
   cat(strsplit(class(x)[[2]], "(?<=Model)", perl = TRUE)[[1]][c(2, 1)], ": '",
@@ -134,22 +138,39 @@ print.Model <- function(x, ...) {
   invisible(x)
 }
 
+# envirnoment mit allen inducer
+ind <- new.env()
+ind$xgboost <- InducerXGBoost
+ind$rf <- InducerRandomForest
 
+
+# Ausgabe des tatsächlichen Modelles Output
 modelObject <- function(x) {
+  UseMethod("modelObject")
+}
+
+modelObject.Model <- function(x) {
   x$output
 }
 
+
+# anzeigen der Trainingsdauer
 modelInfo <- function(x) {
+  UseMethod("modelInfo")
+}
+modelInfo.Model <- function(x) {
   x["training.time.sec"]
 }
-configuration.Model <- function(x) {
-  x$config
-}
 
+# zugriff vom modell auf den inducer
 inducer <- function(x) {
+  UseMethod("inducer")
+}
+inducer.Model <- function(x) {
   do.call(ind[[x$model]], x$config)
 }
 
+# predict funktionen
 predict.ModelXGBoost <- function(x, newdata) {
   if (any(colnames(newdata) %in% x$data$target)) {
     data.table("prediction" = predict(x$output,
