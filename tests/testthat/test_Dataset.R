@@ -1,2 +1,4 @@
-testthat::expect_equal(Dataset(cars, target = "dist")[1,2], 2)
-testthat::expect_error(Dataset(cars, target = "dist")[1,1])
+data <- Dataset(cars, target = "dist", task = "Regression")
+data
+testthat::expect_equal(data[1,2], 2)
+testthat::expect_error(data[1,1])
