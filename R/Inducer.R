@@ -1,6 +1,5 @@
 library(data.table)
 library(xgboost)
-library(ranger)
 #' Inducer for XGBoost
 #' 
 #' @param .data dataset object of class 'Dataset'
@@ -15,7 +14,7 @@ library(ranger)
 #' @param verbose If 0, no informations will be printed. If 1, it will print informations about performances. If 2,additional information will be printed.
 #' @export
 #' @examples 
-#' cars.data <- Dataset(cars, "dist", type = "regression")
+#' cars.data <- Dataset(cars, "dist", task = "Regression")
 #' xgb <- InducerXGBoost(nrounds = 10)
 #' mod <- xgb(cars.data)
 #' 
@@ -23,7 +22,7 @@ library(ranger)
 InducerXGBoost <- function(.data, eta = NULL, nrounds = NULL, max_depth = NULL, colsample_bytree = NULL,
                            colsample_bylevel = NULL, lambda = NULL, alpha = NULL, subsample = NULL, verbose = 0) {
   .f <- function(.data) {
-    if (is.na(nrounds)) {nrounds <- 1}
+    if (is.null(nrounds)) {nrounds <- 1}
     start <- Sys.time()
     output <- xgboost(data = as.matrix(.data$data[, names(metainfo(.data)$feature)]),
                       label = .data$data[, names(metainfo(.data)$target)], verbose = verbose, nrounds = nrounds,
@@ -34,11 +33,11 @@ InducerXGBoost <- function(.data, eta = NULL, nrounds = NULL, max_depth = NULL, 
                    training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
               class = c("ModelXGBoost", "ModelRegression", "Model"))
   }
-  
+  class(.f) <- c("InducerXGBoost", "Inducer")
   if (!missing(.data)) {
     .f(.data)
   }
-  structure(.f, class = c("InducerXGBoost", "Inducer"))
+  .f
 }
 class(InducerXGBoost) <- c("InducerXGBoost", "Inducer")
 
@@ -54,7 +53,7 @@ class(InducerXGBoost) <- c("InducerXGBoost", "Inducer")
 #' @param replace Sample with replacement
 #' @export
 #' @examples 
-#' iris.data <- Dataset(iris, "Species", type = "classification")
+#' iris.data <- Dataset(iris, "Species", task = "Classification")
 #' rforest <- InducerRandomForest(num.trees = 400)
 #' mod <- rforest(cars.data)
 #' 
@@ -63,7 +62,7 @@ InducerRandomForest <- function(.data, min.node.size = NULL, max.depth = NULL, n
                                 replace = TRUE) {
   .f <- function(.data) {
     start <- Sys.time()
-    output <- ranger(as.formula(paste(names(metainfo(.data)$target), "~",
+    output <- ranger::ranger(as.formula(paste(names(metainfo(.data)$target), "~",
                                       paste(names(metainfo(.data)$feature), collapse = "+"))), data = .data$data,
                      min.node.size = min.node.size, max.depth = max.depth, num.trees = num.trees, mtry = mtry,
                      verbose = verbose, replace = replace)
@@ -72,11 +71,12 @@ InducerRandomForest <- function(.data, min.node.size = NULL, max.depth = NULL, n
                    training.time.sec = round(difftime(end, start, units = "s"))[[1]]),
               class = c("ModelRandomForest", paste0("Model", output$forest$treetype), "Model"))
   }
+  class(.f) <- c("InducerRandomForest", "Inducer")
   
   if (!missing(.data)) {
     .f(.data)
   }
-  structure(.f, class = c("InducerRandomForest", "Inducer"))
+  .f
 }
 class(InducerRandomForest) <- c("InducerRandomForest", "Inducer")
 
@@ -91,25 +91,30 @@ hyperparameters.InducerXGBoost <- function(object, ...) {
 }
 
 
-hyperparameters.InducerRandomForest <- function(x) {
+hyperparameters.InducerRandomForest <- function(object, ...) {
   cat("Hyperparameter Space:\n")
   data.table(name = c("min.node.size", "max.depth", "num.trees", "mtry", "verbose", "replace"),
                     type = c(rep("int", 5), "log"),
-                    range = paste0("[", c(1, 0, 1, 1, 0, FALSE), ", ", c(Inf, 1, Inf, Inf, 1, TRUE), "]"))
+                    range = c(paste0("[", c(1, 0, 1, 1, 0), ", ", c(Inf, 1, Inf, Inf, 1), "]"), "[FALSE, TRUE]"))
 }
 
-# Anzeigen der angegebenen Hyperparamter
+
+#' @title confuguration
+#' @description configuration shows the defined hyperparameters of the inducer
+#' @param x Inducer or Model object
+#' @param ... Further arguments passed to or from other methods (currently ignored)
+#' @export
 configuration <- function(x, ...) {
   UseMethod("configuration")
 }
 
-configuration.default <- function(x, ...) {
+configuration.Inducer <- function(x, ...) {
   hypernames <- ls(environment(x))
   defhyp <- lapply(hypernames, function(name) {
     environment(x)[[name]]
     })
   names(defhyp) <- hypernames
-  defhyp[!is.null(defhyp)]
+  defhyp[!vapply(defhyp, is.null, FUN.VALUE = TRUE)]
 }
 
 `configuration<-` <- function(x, value) {
@@ -119,17 +124,24 @@ configuration.default <- function(x, ...) {
   x
 }
 
-configuration.Model <- function(x) {
+configuration.Model <- function(x, ...) {
   x$config
 }
 
-# print Funktionen
+#' @title Inducer Print
+#' @param x object of class Inducer
+#' @param ... Further arguments passed to or from other methods (currently ignored)
+#' @export
 print.Inducer <- function(x, ...) {
  cat("Inducer:", regmatches(class(x)[[1]], regexpr("(?<=Inducer).*", class(x)[[1]], perl = TRUE)), "\n")
  cat("Configuartion:", paste0(paste(names(configuration(x)), "=", configuration(x)), collapse = ", "))
  invisible(x)
 }
 
+#' @title Model Print
+#' @param x object of class Model
+#' @param ... Further arguments passed to or from other methods (currently ignored)
+#' @export
 print.Model <- function(x, ...) {
   cat(strsplit(class(x)[[2]], "(?<=Model)", perl = TRUE)[[1]][c(2, 1)], ": '",
       regmatches(class(x)[[1]], regexpr("(?<=Model).*", class(x)[[1]], perl = TRUE)),
@@ -137,13 +149,13 @@ print.Model <- function(x, ...) {
   invisible(x)
 }
 
-# envirnoment mit allen inducer
+# environment mit allen inducer
 ind <- new.env()
 ind$xgboost <- InducerXGBoost
 ind$rf <- InducerRandomForest
 
 
-# Ausgabe des tatsächlichen Modelles Output
+# Ausgabe des tatsächlichen Modell Outputs
 modelObject <- function(x) {
   UseMethod("modelObject")
 }
