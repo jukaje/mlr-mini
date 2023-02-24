@@ -1,2 +1,2 @@
 library("testthat")
-test_check("<your packkage name>")
+test_check("<mlr.mini>")
