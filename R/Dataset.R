@@ -2,7 +2,7 @@
 #' @description How is the dataset structured and how can it be manipulated
 #' @param data: Dataframe for target and features
 #' @param target: Character, which represent the target name
-#' @param type: "regression", "classification"
+#' @param task: "regression", "classification"
 #' @param name: Character
 #' @examples. 
 #' Dataset(cars, target = "dist", task = "Regression")
